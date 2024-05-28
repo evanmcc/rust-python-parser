@@ -1165,6 +1165,27 @@ ClassDef: ast::Stmt = {
     },
 };
 
+RoleDef: ast::Stmt = {
+    <decorator_list:Decorator*> <location:@L> "role" <name:Identifier> <type_params:TypeParamList?> <a:("(" ArgumentList ")")?> ":" <body:Suite> => {
+        let (bases, keywords) = match a {
+            Some((_, arg, _)) => (arg.args, arg.keywords),
+            None => (vec![], vec![]),
+        };
+        let end_location = body.last().unwrap().end();
+        ast::Stmt::ClassDef(
+            ast::StmtClassDef {
+                name,
+                bases,
+                keywords,
+                body,
+                decorator_list,
+                type_params: type_params.unwrap_or_default(),
+                range: (location..end_location).into()
+            },
+        )
+    },
+};
+
 
 TypeParamList: Vec<ast::TypeParam> = {
     <location:@L> "[" <vars:OneOrMore<TypeParam>> ","? "]" <end_location:@R> => {
